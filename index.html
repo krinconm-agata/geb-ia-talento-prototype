@@ -902,8 +902,8 @@
 /* ===================== DATA ===================== */
 const stepsConfig = [
   { n:1, key:"selecta",     name:"Selecta",     button:"Evaluar con Selecta" },
-  { n:2, key:"bluesite",    name:"Bluesite",    button:"Enviar a Bluesite" },
-  { n:3, key:"anonimizar",  name:"Anonimizar",  button:"Anonimizar y enviar HV" },
+  { n:2, key:"anonimizar",  name:"Anonimizar",  button:"Anonimizar y enviar HV" },
+  { n:3, key:"bluesite",    name:"Bluesite",    button:"Enviar a Bluesite" },
   { n:4, key:"cosinte",     name:"Cosinte",     button:"Enviar a Cosinte" },
   { n:5, key:"medilaboral", name:"Medilaboral", button:"Enviar a Medilaboral" },
   { n:6, key:"oferta",      name:"Oferta",      button:"Generar oferta" },
@@ -993,7 +993,8 @@ const candidates = [
     timelineTimes:["28/06 · 09:15 a. m.","28/06 · 09:20 a. m.","28/06 · 09:45 a. m.","01/07 · 11:10 a. m.","08/07 · 10:30 a. m.",null],
     bluesite:{status:"aprobado", update:"Hace 5 días", match:95,
       skills:[{name:"Estabilidad emocional",value:92},{name:"Atención al detalle",value:96},{name:"Tolerancia a la presión",value:90}]},
-    cosinte:{status:"aprobado", update:"Hace 3 días", tiempo:"1 día"},
+    cosinte:{status:"aprobado", update:"Hace 3 días", tiempo:"1 día", match:88,
+      skills:[{name:"Verificación de antecedentes",value:95},{name:"Validación de referencias",value:90},{name:"Consistencia de información",value:85}]},
     medilaboral:{status:"en-proceso", update:"Hoy, 09:10 a. m.", progress:60},
     liderApproved:true,
   },
@@ -1017,7 +1018,8 @@ const candidates = [
     skills:[{name:"Modelado financiero",value:87},{name:"Excel avanzado",value:90},{name:"Análisis de riesgo",value:84}],
     timeline:["done","done","done","current","pending","pending"],
     timelineTimes:["29/06 · 09:05 a. m.","29/06 · 09:12 a. m.","29/06 · 09:50 a. m.","10/07 · 09:00 a. m.",null,null],
-    bluesite:{status:"en-proceso", update:"Ayer, 04:45 p. m.", progress:30},
+    bluesite:{status:"rechazado", update:"Hace 1 día", match:74,
+      skills:[{name:"Estabilidad emocional",value:70},{name:"Atención al detalle",value:78},{name:"Tolerancia a la presión",value:73}]},
     cosinte:{status:"pendiente", update:"Sin iniciar"},
     medilaboral:{status:"pendiente", update:"Sin iniciar"},
   },
@@ -1121,11 +1123,17 @@ function terceroCard(type, data, mode){
   }
   const btnLabel = mode === 'static' ? 'Ver detalles' : 'Ver detalle completo';
   const btnAttr = mode === 'static' ? '' : `onclick="openCandidate(${data._candId})"`;
-  let bluesiteResults = '';
-  if (type === 'bluesite' && data.match !== undefined){
-    bluesiteResults = `
-    <div class="rc-bluesite-match"><span>Match psicotécnico</span><strong>${data.match}%</strong></div>
+  let scoreResults = '';
+  let thresholdTag = '';
+  if ((type === 'bluesite' || type === 'cosinte') && data.match !== undefined){
+    const matchLabel = type === 'bluesite' ? 'Match psicotécnico' : 'Puntaje de verificación';
+    scoreResults = `
+    <div class="rc-bluesite-match"><span>${matchLabel}</span><strong>${data.match}%</strong></div>
     ${skillBars(data.skills)}`;
+    const passed = data.match >= 80;
+    thresholdTag = `<div class="eval-decided ${passed ? 'approved' : 'rejected'}" style="margin-top:16px;">
+      ${passed ? `✓ Supera el umbral del 80% · pasa automáticamente` : `✕ No supera el umbral del 80% · no continúa en el proceso`}
+    </div>`;
   }
   return `<div class="tercero-card">
     <div class="tercero-head">
@@ -1143,7 +1151,8 @@ function terceroCard(type, data, mode){
       ${extraRow}
     </div>
     ${progressBar}
-    ${bluesiteResults}
+    ${scoreResults}
+    ${thresholdTag}
     <button class="tercero-link" ${btnAttr}>${btnLabel}</button>
   </div>`;
 }
@@ -1173,10 +1182,10 @@ function badgeFor(step, c){
   }
   if (!stepLoaded[step]) return `<span class="mini-pill muted">Sin evaluar</span>`;
   if (step === 1) return `<span class="cand-score ${scoreClass(c.match)}">${c.match}</span>`;
-  if (step === 2) return pill(c.bluesite.status);
+  if (step === 3) return pill(c.bluesite.status);
   if (step === 4) return pill(c.cosinte.status);
   if (step === 5) return pill(c.medilaboral.status);
-  if (step === 3){
+  if (step === 2){
     if (c.liderApproved) return `<span class="mini-pill green">Aprobado por líder</span>`;
     return `<span class="mini-pill blue">Enviada</span>`;
   }
@@ -1353,7 +1362,7 @@ function renderResults(){
     return;
   }
 
-  if (currentStep === 3){
+  if (currentStep === 2){
     const approvedNote = c.liderApproved
       ? `<div class="eval-decided approved" style="margin-top:14px;">✓ El líder de área ya aprobó a esta persona candidata</div>`
       : '';
@@ -1369,13 +1378,14 @@ function renderResults(){
     return;
   }
 
-  const typeMap = {2:'bluesite', 4:'cosinte', 5:'medilaboral'};
+  const typeMap = {3:'bluesite', 4:'cosinte', 5:'medilaboral'};
   const type = typeMap[currentStep];
   const data = Object.assign({_candId:c.id}, c[type]);
+  const autoHandled = (currentStep === 3 || currentStep === 4); // Bluesite y Cosinte: umbral automático, sin revisión manual
   el.innerHTML = `
     <div class="eyebrow" style="color:var(--geb-teal); margin-bottom:12px;">Resultado ${cfg.name} · ${c.name}</div>
     ${terceroCard(type, data, 'navigate')}
-    ${decisionBlock(currentStep, c.id)}
+    ${autoHandled ? '' : decisionBlock(currentStep, c.id)}
   `;
 }
 
