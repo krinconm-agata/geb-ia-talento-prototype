@@ -266,6 +266,17 @@
   .cand-row{ display:flex; align-items:center; gap:11px; padding:10px 8px; border-radius:10px; transition:background .15s; cursor:pointer; border:1px solid transparent;}
   .cand-row:hover{ background:var(--bg-page);}
   .cand-row.selected{ background:#EEF3FC; border-color:#D3E1F5;}
+  .cand-checkbox{ flex:none; width:16px; height:16px; accent-color:var(--geb-primario); cursor:pointer;}
+  .bulk-action-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:#EEF3FC; border:1px solid #D3E1F5; border-radius:10px;
+    padding:9px 12px; margin:2px 0 8px; font-size:12.5px; font-weight:600; color:var(--geb-primario);
+  }
+  .bulk-anon-btn{
+    background:var(--geb-primario); color:#fff; border:none; border-radius:8px;
+    padding:8px 13px; font-weight:600; font-size:12.5px; white-space:nowrap;
+  }
+  .bulk-anon-btn:hover{ filter:brightness(0.92);}
   .cand-rank{ width:16px; font-size:12px; font-weight:700; color:var(--ink-faint); flex:none;}
   .cand-avatar{
     width:34px; height:34px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center;
@@ -287,6 +298,7 @@
   .mini-pill.gray{ background:#EEF1F5; color:var(--ink-soft);}
   .mini-pill.graylight{ background:#F5F7FA; color:var(--ink-faint);}
   .mini-pill.magenta{ background:#FBE7EF; color:var(--geb-magenta);}
+  .mini-pill.gold{ background:#FBF3E1; color:#8A6A10;}
   .mini-pill.muted{ background:#F0F2F6; color:var(--ink-faint); font-weight:600;}
 
   .results-card{ padding:22px; display:flex; flex-direction:column;}
@@ -495,6 +507,29 @@
   .report-section-header h3{ font-size:15px; font-weight:700; color:var(--ink);}
   .report-section-header span{ font-size:12.5px; color:var(--ink-faint);}
   #reportPagination{ margin-top:6px;}
+
+  .eye-btn{
+    width:32px; height:32px; border-radius:8px; border:1px solid var(--line); background:#fff;
+    display:flex; align-items:center; justify-content:center; color:var(--ink-soft);
+  }
+  .eye-btn:hover{ border-color:var(--geb-primario); color:var(--geb-primario); background:#F4F8FD;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(11,26,51,0.55); z-index:100;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .modal-panel{
+    background:#fff; border-radius:16px; max-width:520px; width:100%;
+    max-height:88vh; overflow-y:auto; position:relative; padding:28px 24px 24px;
+    box-shadow:0 24px 60px rgba(11,26,51,0.3);
+  }
+  .modal-close{
+    position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:9px;
+    border:none; background:var(--bg-page); color:var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; z-index:1;
+  }
+  .modal-close:hover{ background:#E4E9F1; color:var(--ink);}
+  #candidateModalContent .report-card-head{ padding-right:34px;}
   .vac-select-card{
     flex:1; min-width:220px; text-align:left; background:#fff; border:1.5px solid var(--line);
     border-radius:12px; padding:15px 16px; transition:all .15s; cursor:pointer;
@@ -566,6 +601,7 @@
   .eval-decided{ display:flex; align-items:center; justify-content:center; gap:7px; margin-top:18px; padding:11px; border-radius:9px; font-weight:700; font-size:13px;}
   .eval-decided.approved{ background:#EBF7E1; color:var(--geb-secundario);}
   .eval-decided.rejected{ background:#FBE7EF; color:var(--geb-error);}
+  .eval-decided.warning{ background:#FBF3E1; color:#8A6A10;}
   .cand-row .mini-pill.decision{ margin-left:4px;}
 
   /* ============ BLUESITE MATCH (recruiter + líder) ============ */
@@ -880,15 +916,34 @@
       </div>
 
       <div class="vac-select-label">Sus vacantes con finalistas asignados — seleccione una para evaluar sus informes:</div>
-      <div class="vac-select-row" id="vacSelectRow"></div>
-      <div id="liderVacPagination"></div>
+      <div class="card vacancy-card">
+        <table class="vac-table">
+          <thead><tr><th>Vacante</th><th>Pendientes</th><th>SLA</th></tr></thead>
+          <tbody id="liderVacTableBody"></tbody>
+        </table>
+        <div id="liderVacPagination"></div>
+      </div>
 
       <div class="report-section-header">
         <h3>Informes anonimizados</h3>
-        <span>Seleccione una persona candidata para evaluar y decidir</span>
+        <span>Haga clic en el ícono de ojo para evaluar y decidir</span>
       </div>
-      <div class="report-grid" id="reportGrid"></div>
-      <div id="reportPagination"></div>
+      <div class="card vacancy-card">
+        <table class="vac-table">
+          <thead><tr><th>Candidato</th><th>Puntuación IA</th><th>Experiencia</th><th>Decisión</th><th></th></tr></thead>
+          <tbody id="reportTableBody"></tbody>
+        </table>
+        <div id="reportPagination"></div>
+      </div>
+    </div>
+
+    <div id="candidateModalOverlay" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeCandidateModal()">
+      <div class="modal-panel">
+        <button class="modal-close" onclick="closeCandidateModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+        <div id="candidateModalContent"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -986,11 +1041,9 @@ const candidates = [
     skills:[{name:"Modelado financiero",value:96},{name:"Excel avanzado",value:98},{name:"Análisis de riesgo",value:91}],
     timeline:["done","done","done","done","current","pending"],
     timelineTimes:["28/06 · 09:15 a. m.","28/06 · 09:20 a. m.","28/06 · 09:45 a. m.","01/07 · 11:10 a. m.","08/07 · 10:30 a. m.",null],
-    bluesite:{status:"aprobado", update:"Hace 5 días", match:95,
-      skills:[{name:"Estabilidad emocional",value:92},{name:"Atención al detalle",value:96},{name:"Tolerancia a la presión",value:90}]},
-    cosinte:{status:"aprobado", update:"Hace 3 días", tiempo:"1 día", match:88,
-      skills:[{name:"Verificación de antecedentes",value:95},{name:"Validación de referencias",value:90},{name:"Consistencia de información",value:85}]},
-    medilaboral:{status:"en-proceso", update:"Hoy, 09:10 a. m.", progress:60},
+    bluesite:{status:"aprobado", update:"Hace 5 días"},
+    cosinte:{status:"aprobado", update:"Hace 3 días", tiempo:"1 día"},
+    medilaboral:{status:"bajo", update:"Hoy, 09:10 a. m.", tiempo:"2 días"},
     liderApproved:true,
   },
   {
@@ -1001,9 +1054,9 @@ const candidates = [
     skills:[{name:"Modelado financiero",value:90},{name:"Excel avanzado",value:94},{name:"Análisis de riesgo",value:86}],
     timeline:["done","done","done","current","pending","pending"],
     timelineTimes:["29/06 · 08:40 a. m.","29/06 · 08:50 a. m.","29/06 · 09:30 a. m.","09/07 · 03:15 p. m.",null,null],
-    bluesite:{status:"en-proceso", update:"Hoy, 10:20 a. m.", progress:45},
-    cosinte:{status:"pendiente", update:"Sin iniciar"},
-    medilaboral:{status:"pendiente", update:"Sin iniciar"},
+    bluesite:{status:"aprobado", update:"Hace 2 días"},
+    cosinte:{status:"aprobado", update:"Hace 1 día", tiempo:"1 día"},
+    medilaboral:{status:"medio", update:"Hoy, 08:30 a. m.", tiempo:"1 día"},
   },
   {
     id:3, name:"Camila Rodríguez", initials:"CR", grad:["var(--geb-magenta)","var(--geb-gold)"],
@@ -1013,8 +1066,7 @@ const candidates = [
     skills:[{name:"Modelado financiero",value:87},{name:"Excel avanzado",value:90},{name:"Análisis de riesgo",value:84}],
     timeline:["done","done","done","current","pending","pending"],
     timelineTimes:["29/06 · 09:05 a. m.","29/06 · 09:12 a. m.","29/06 · 09:50 a. m.","10/07 · 09:00 a. m.",null,null],
-    bluesite:{status:"rechazado", update:"Hace 1 día", match:74,
-      skills:[{name:"Estabilidad emocional",value:70},{name:"Atención al detalle",value:78},{name:"Tolerancia a la presión",value:73}]},
+    bluesite:{status:"rechazado", update:"Hace 1 día"},
     cosinte:{status:"pendiente", update:"Sin iniciar"},
     medilaboral:{status:"pendiente", update:"Sin iniciar"},
   },
@@ -1024,11 +1076,11 @@ const candidates = [
     location:"Bogotá, Colombia", linkedin:"linkedin.com/in/andresgomez", role:"Analista Financiero",
     match:85,
     skills:[{name:"Modelado financiero",value:83},{name:"Excel avanzado",value:88},{name:"Análisis de riesgo",value:79}],
-    timeline:["done","done","done","pending","pending","pending"],
-    timelineTimes:["30/06 · 08:20 a. m.","30/06 · 08:30 a. m.","30/06 · 09:15 a. m.",null,null,null],
-    bluesite:{status:"no-iniciado", update:"Sin iniciar"},
-    cosinte:{status:"no-iniciado", update:"Sin iniciar"},
-    medilaboral:{status:"no-iniciado", update:"Sin iniciar"},
+    timeline:["done","done","done","current","pending","pending"],
+    timelineTimes:["30/06 · 08:20 a. m.","30/06 · 08:30 a. m.","30/06 · 09:15 a. m.","05/07 · 10:00 a. m.",null,null],
+    bluesite:{status:"aprobado", update:"Hace 4 días"},
+    cosinte:{status:"aprobado", update:"Hace 3 días", tiempo:"1 día"},
+    medilaboral:{status:"alto", update:"Hace 1 día", tiempo:"2 días"},
   },
   {
     id:5, name:"Laura Martínez", initials:"LM", grad:["var(--geb-gold)","var(--geb-orange)"],
@@ -1050,6 +1102,9 @@ const statusMeta = {
   "pendiente":    {label:"Pendiente",   cls:"gray"},
   "no-iniciado":  {label:"No iniciado", cls:"graylight"},
   "rechazado":    {label:"Rechazado",   cls:"magenta"},
+  "bajo":         {label:"Riesgo bajo",  cls:"green"},
+  "medio":        {label:"Riesgo medio", cls:"gold"},
+  "alto":         {label:"Riesgo alto",  cls:"magenta"},
 };
 
 const terceroIcons = {
@@ -1059,9 +1114,10 @@ const terceroIcons = {
 };
 
 let currentStep = 1;
-let stepLoaded = {1:false, 2:false, 3:false, 4:false, 5:false, 6:false};
 let selectedCandidate = {1:null, 2:null, 3:null, 4:null, 5:null, 6:null};
 const offerGenerated = {}; // candId -> true once an offer has been generated
+const selectaAction = {}; // candId -> 'sent' (anonimizado y enviado al líder) | 'rejected'
+let checkedForAnon = new Set(); // candId set, checkboxes in Selecta step
 
 /* ===================== HELPERS ===================== */
 function scoreClass(v){ if (v>=90) return ''; if (v>=80) return 'mid'; return 'low'; }
@@ -1113,22 +1169,26 @@ function terceroCard(type, data, mode){
   if (data.status === 'en-proceso' && data.progress !== undefined){
     extraRow = `<div><span>Progreso</span><strong>${data.progress}%</strong></div>`;
     progressBar = `<div class="metric-track"><div class="metric-fill" style="width:${data.progress}%; background:var(--geb-skyblue);"></div></div>`;
-  } else if (data.status === 'aprobado'){
-    extraRow = `<div><span>Resultado</span><strong>Aprobado</strong></div>` + (data.tiempo ? `<div><span>Tiempo en este estado</span><strong>${data.tiempo}</strong></div>` : '');
+  } else if (data.status === 'aprobado' || data.status === 'bajo' || data.status === 'medio' || data.status === 'alto'){
+    extraRow = `<div><span>Resultado</span><strong>${meta.label}</strong></div>` + (data.tiempo ? `<div><span>Tiempo en este estado</span><strong>${data.tiempo}</strong></div>` : '');
   }
   const btnLabel = mode === 'static' ? 'Ver detalles' : 'Ver detalle completo';
   const btnAttr = mode === 'static' ? '' : `onclick="openCandidate(${data._candId})"`;
-  let scoreResults = '';
   let thresholdTag = '';
-  if ((type === 'bluesite' || type === 'cosinte') && data.match !== undefined){
-    const matchLabel = type === 'bluesite' ? 'Match psicotécnico' : 'Puntaje de verificación';
-    scoreResults = `
-    <div class="rc-bluesite-match"><span>${matchLabel}</span><strong>${data.match}%</strong></div>
-    ${skillBars(data.skills)}`;
-    const passed = data.match >= 80;
-    thresholdTag = `<div class="eval-decided ${passed ? 'approved' : 'rejected'}" style="margin-top:16px;">
-      ${passed ? `✓ Supera el umbral del 80% · pasa automáticamente` : `✕ No supera el umbral del 80% · no continúa en el proceso`}
-    </div>`;
+  if (type === 'bluesite' || type === 'cosinte'){
+    if (data.status === 'aprobado'){
+      thresholdTag = `<div class="eval-decided approved" style="margin-top:16px;">✓ Aprobado por el proveedor · pasa automáticamente</div>`;
+    } else if (data.status === 'rechazado'){
+      thresholdTag = `<div class="eval-decided rejected" style="margin-top:16px;">✕ No aprobado por el proveedor · no continúa en el proceso</div>`;
+    }
+  } else if (type === 'medilaboral'){
+    if (data.status === 'bajo'){
+      thresholdTag = `<div class="eval-decided approved" style="margin-top:16px;">✓ Riesgo bajo · pasa automáticamente</div>`;
+    } else if (data.status === 'alto'){
+      thresholdTag = `<div class="eval-decided rejected" style="margin-top:16px;">✕ Riesgo alto · descartado automáticamente</div>`;
+    } else if (data.status === 'medio'){
+      thresholdTag = `<div class="eval-decided warning" style="margin-top:16px;">⚠ Riesgo medio · requiere revisión manual en SAP</div>`;
+    }
   }
   return `<div class="tercero-card">
     <div class="tercero-head">
@@ -1146,7 +1206,6 @@ function terceroCard(type, data, mode){
       ${extraRow}
     </div>
     ${progressBar}
-    ${scoreResults}
     ${thresholdTag}
     <button class="tercero-link" ${btnAttr}>${btnLabel}</button>
   </div>`;
@@ -1175,14 +1234,15 @@ function badgeFor(step, c){
   if (step === 6) {
     return offerGenerated[c.id] ? `<span class="mini-pill green">Oferta enviada</span>` : `<span class="mini-pill graylight">Sin oferta</span>`;
   }
-  if (!stepLoaded[step]) return `<span class="mini-pill muted">Sin evaluar</span>`;
   if (step === 1) return `<span class="cand-score ${scoreClass(c.match)}">${c.match}</span>`;
   if (step === 3) return pill(c.bluesite.status);
   if (step === 4) return pill(c.cosinte.status);
   if (step === 5) return pill(c.medilaboral.status);
   if (step === 2){
     if (c.liderApproved) return `<span class="mini-pill green">Aprobado por líder</span>`;
-    return `<span class="mini-pill blue">Enviada</span>`;
+    if (selectaAction[c.id] === 'sent') return `<span class="mini-pill blue">Enviada</span>`;
+    if (selectaAction[c.id] === 'rejected') return `<span class="mini-pill magenta">Rechazada</span>`;
+    return `<span class="mini-pill graylight">Sin enviar</span>`;
   }
   return '';
 }
@@ -1217,38 +1277,43 @@ function renderRanking(){
   if (rankingPage > totalPages) rankingPage = totalPages;
   const startIdx = (rankingPage-1)*rankingPageSize;
   const pageItems = candidates.slice(startIdx, startIdx+rankingPageSize);
+  const isSelecta = currentStep === 1;
   const rows = pageItems.map((c,localI)=>{
     const i = startIdx+localI;
     const sel = selectedCandidate[currentStep] === c.id ? 'selected' : '';
-    const decKey = `${currentStep}-${c.id}`;
-    const dec = recruiterDecisions[decKey];
-    const decMark = dec ? `<span class="mini-pill ${dec==='approved'?'green':'magenta'} decision">${dec==='approved'?'✓':'✕'}</span>` : '';
+    const checkbox = isSelecta
+      ? `<input type="checkbox" class="cand-checkbox" ${checkedForAnon.has(c.id)?'checked':''}
+          onclick="event.stopPropagation()" onchange="toggleAnonCheck(${c.id}, this.checked)">`
+      : '';
     return `<div class="cand-row ${sel}" data-cid="${c.id}">
+      ${checkbox}
       <span class="cand-rank">${i+1}</span>
       <span class="cand-avatar" style="background:linear-gradient(135deg, ${c.grad[0]}, ${c.grad[1]});">${c.initials}</span>
       <span class="cand-info">
         <div class="cand-name">${c.name}</div>
         <div class="cand-exp">${c.exp}</div>
       </span>
-      ${badgeFor(currentStep, c)}${decMark}
+      ${badgeFor(currentStep, c)}
     </div>`;
   }).join('');
-  const showEvalBtn = currentStep !== 6;
+  const bulkBar = (isSelecta && checkedForAnon.size > 0) ? `
+    <div class="bulk-action-bar">
+      <span>${checkedForAnon.size} seleccionada${checkedForAnon.size>1?'s':''}</span>
+      <button class="bulk-anon-btn" onclick="bulkAnonimizar()">Anonimizar y enviar a líder</button>
+    </div>` : '';
   el.innerHTML = `
-    ${showEvalBtn ? `<button class="eval-btn" id="evalBtn">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      ${cfg.button}
-    </button>` : ''}
     <div class="ranking-head">
       <h3>Lista de candidatos</h3>
       <span class="ranking-count">${candidates.length} de 12</span>
     </div>
+    ${isSelecta ? `<button class="filter-btn" id="recalcBtn" onclick="recalcularSelecta()" style="margin-bottom:10px; width:100%; justify-content:center;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+      Recalcular ranking
+    </button>` : ''}
+    ${bulkBar}
     <div class="cand-list">${rows}</div>
     ${paginationHtml(candidates.length, rankingPage, rankingPageSize, 'goRankingPage')}
   `;
-  if (showEvalBtn){
-    document.getElementById('evalBtn').addEventListener('click', ()=>handleStepAction(currentStep));
-  }
   el.querySelectorAll('.cand-row').forEach(row=>{
     row.addEventListener('click', ()=>{
       selectedCandidate[currentStep] = parseInt(row.dataset.cid);
@@ -1258,18 +1323,35 @@ function renderRanking(){
   });
 }
 
-function handleStepAction(step){
-  const btn = document.getElementById('evalBtn');
-  const original = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = 'Cargando…';
+function recalcularSelecta(){
+  const btn = document.getElementById('recalcBtn');
+  if (btn){ btn.disabled = true; btn.innerHTML = 'Recalculando…'; }
   setTimeout(()=>{
-    stepLoaded[step] = true;
-    selectedCandidate[step] = null;
+    candidates.forEach(c => {
+      const delta = Math.round((Math.random()*6)-3); // ajuste de -3 a +3 puntos
+      c.match = Math.max(60, Math.min(99, c.match + delta));
+      c.skills.forEach(s => {
+        const d2 = Math.round((Math.random()*6)-3);
+        s.value = Math.max(50, Math.min(100, s.value + d2));
+      });
+    });
+    candidates.sort((a,b) => b.match - a.match);
     rankingPage = 1;
     renderRanking();
     renderResults();
-  }, 550);
+  }, 650);
+}
+
+function toggleAnonCheck(candId, checked){
+  if (checked) checkedForAnon.add(candId); else checkedForAnon.delete(candId);
+  renderRanking();
+}
+
+function bulkAnonimizar(){
+  checkedForAnon.forEach(id => { selectaAction[id] = 'sent'; });
+  checkedForAnon.clear();
+  renderRanking();
+  renderResults();
 }
 
 function renderResults(){
@@ -1315,16 +1397,6 @@ function renderResults(){
     return;
   }
 
-  if (!stepLoaded[currentStep]){
-    el.innerHTML = `
-      <div class="empty-state">
-        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <h4>Sin resultados todavía</h4>
-        <p>Presiona "${cfg.button}" para generar los resultados de todas las personas candidatas.</p>
-      </div>`;
-    return;
-  }
-
   const cid = selectedCandidate[currentStep];
   if (!cid){
     el.innerHTML = `
@@ -1352,19 +1424,25 @@ function renderResults(){
         Ver detalle completo
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
-      ${decisionBlock(1, c.id)}
+      ${selectaActionBlock(c)}
     `;
     return;
   }
 
   if (currentStep === 2){
-    const approvedNote = c.liderApproved
-      ? `<div class="eval-decided approved" style="margin-top:14px;">✓ El líder de área ya aprobó a esta persona candidata</div>`
-      : '';
+    let statusNote;
+    if (c.liderApproved){
+      statusNote = `<div class="eval-decided approved" style="margin-top:14px;">✓ El líder de área ya aprobó a esta persona candidata</div>`;
+    } else if (selectaAction[c.id] === 'sent'){
+      statusNote = `<p style="font-size:13px; color:var(--ink-soft); line-height:1.6;">La hoja de vida de <strong style="color:var(--ink)">${c.name}</strong> fue anonimizada (sin nombre, foto ni datos de contacto) y enviada al líder del área para revisión sin sesgos.</p>`;
+    } else if (selectaAction[c.id] === 'rejected'){
+      statusNote = `<p style="font-size:13px; color:var(--ink-soft); line-height:1.6;">Esta persona candidata fue descartada en el paso Selecta y no fue enviada al líder.</p>`;
+    } else {
+      statusNote = `<p style="font-size:13px; color:var(--ink-soft); line-height:1.6;">Esta persona candidata todavía no ha sido anonimizada. Selecciónala en el paso <strong style="color:var(--ink)">Selecta</strong> y usa "Anonimizar y enviar a líder".</p>`;
+    }
     el.innerHTML = `
       <div class="results-head"><div><div class="eyebrow">Anonimizar</div><h3>${c.name}</h3></div></div>
-      <p style="font-size:13px; color:var(--ink-soft); line-height:1.6;">La hoja de vida de <strong style="color:var(--ink)">${c.name}</strong> fue anonimizada (sin nombre, foto ni datos de contacto) y enviada al líder del área para revisión sin sesgos.</p>
-      ${approvedNote}
+      ${statusNote}
       <button class="detail-link-btn" onclick="openCandidate(${c.id})">
         Ver detalle completo
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -1376,31 +1454,30 @@ function renderResults(){
   const typeMap = {3:'bluesite', 4:'cosinte', 5:'medilaboral'};
   const type = typeMap[currentStep];
   const data = Object.assign({_candId:c.id}, c[type]);
-  const autoHandled = (currentStep === 3 || currentStep === 4); // Bluesite y Cosinte: umbral automático, sin revisión manual
+  // Bluesite, Cosinte y Medilaboral: resultado automático del proveedor (umbral / nivel de riesgo), sin revisión manual del reclutador.
   el.innerHTML = `
     <div class="eyebrow" style="color:var(--geb-teal); margin-bottom:12px;">Resultado ${cfg.name} · ${c.name}</div>
     ${terceroCard(type, data, 'navigate')}
-    ${autoHandled ? '' : decisionBlock(currentStep, c.id)}
   `;
 }
 
-/* ===================== HUMAN-IN-THE-LOOP (recruiter approve/reject) ===================== */
-const recruiterDecisions = {}; // key `${step}-${candId}` -> 'approved' | 'rejected'
-
-function decisionBlock(step, candId){
-  const key = `${step}-${candId}`;
-  const decision = recruiterDecisions[key];
-  if (decision){
-    return `<div class="eval-decided ${decision}">${decision==='approved' ? '✓ Aprobada por ti' : '✕ Rechazada por ti'}</div>`;
+function selectaActionBlock(c){
+  const action = selectaAction[c.id];
+  if (action === 'sent'){
+    return `<div class="eval-decided approved">✓ Anonimizada y enviada al líder</div>`;
+  }
+  if (action === 'rejected'){
+    return `<div class="eval-decided rejected">✕ Rechazada por ti</div>`;
   }
   return `<div class="eval-decision">
-    <button class="eval-approve" onclick="decideRecruiter('${key}','approved')">✓ Aprobar</button>
-    <button class="eval-reject" onclick="decideRecruiter('${key}','rejected')">✕ Rechazar</button>
+    <button class="eval-approve" onclick="decideSelecta(${c.id},'sent')">Anonimizar y enviar a líder</button>
+    <button class="eval-reject" onclick="decideSelecta(${c.id},'rejected')">✕ Rechazar</button>
   </div>`;
 }
 
-function decideRecruiter(key, decision){
-  recruiterDecisions[key] = decision;
+function decideSelecta(candId, action){
+  selectaAction[candId] = action;
+  checkedForAnon.delete(candId);
   renderRanking();
   renderResults();
 }
@@ -1552,7 +1629,7 @@ function enterPortal(role){
     if (!recruiterInitDone){ renderMain(); recruiterInitDone = true; }
   } else if (role === 'lider'){
     document.getElementById('liderApp').style.display = 'grid';
-    if (!liderInitDone){ renderLiderVacancies(); selectVacancy(liderVacancies[0].id); liderInitDone = true; }
+    if (!liderInitDone){ renderLiderVacTable(); selectVacancy(liderVacancies[0].id); liderInitDone = true; }
   }
   window.scrollTo(0,0);
 }
@@ -1578,17 +1655,13 @@ const liderVacancies = [
     assigned:"Asignada hace 1 día", sla:"Vence hoy", slaUrgent:true,
     candidates:[
       { label:"Candidato DATA-001", score:98, exp:"6 – 8 años", assigned:"Asignado hace 1 día",
-        skills:[{n:"Python",v:100},{n:"SQL",v:95},{n:"Azure",v:90},{n:"Spark",v:90},{n:"ML",v:85},{n:"Power BI",v:80}],
-        bluesite:{status:"aprobada", match:94, skills:[{n:"Estabilidad emocional",v:92},{n:"Atención al detalle",v:95},{n:"Tolerancia a la presión",v:90}]} },
+        skills:[{n:"Python",v:100},{n:"SQL",v:95},{n:"Azure",v:90},{n:"Spark",v:90},{n:"ML",v:85},{n:"Power BI",v:80}] },
       { label:"Candidato DATA-002", score:92, exp:"5 – 7 años", assigned:"Asignado hace 1 día",
-        skills:[{n:"Python",v:95},{n:"SQL",v:90},{n:"Azure",v:85},{n:"Spark",v:90},{n:"ML",v:75},{n:"Power BI",v:70}],
-        bluesite:{status:"aprobada", match:89, skills:[{n:"Estabilidad emocional",v:86},{n:"Atención al detalle",v:90},{n:"Tolerancia a la presión",v:85}]} },
+        skills:[{n:"Python",v:95},{n:"SQL",v:90},{n:"Azure",v:85},{n:"Spark",v:90},{n:"ML",v:75},{n:"Power BI",v:70}] },
       { label:"Candidato DATA-003", score:84, exp:"4 – 6 años", assigned:"Asignado hace 1 día",
-        skills:[{n:"Python",v:85},{n:"SQL",v:80},{n:"Azure",v:75},{n:"Spark",v:70},{n:"ML",v:60},{n:"Power BI",v:65}],
-        bluesite:{status:"aprobada", match:81, skills:[{n:"Estabilidad emocional",v:78},{n:"Atención al detalle",v:83},{n:"Tolerancia a la presión",v:80}]} },
+        skills:[{n:"Python",v:85},{n:"SQL",v:80},{n:"Azure",v:75},{n:"Spark",v:70},{n:"ML",v:60},{n:"Power BI",v:65}] },
       { label:"Candidato DATA-004", score:76, exp:"3 – 5 años", assigned:"Asignado hace 1 día",
-        skills:[{n:"Python",v:75},{n:"SQL",v:70},{n:"Azure",v:70},{n:"Spark",v:60},{n:"ML",v:50},{n:"Power BI",v:50}],
-        bluesite:{status:"aprobada", match:75, skills:[{n:"Estabilidad emocional",v:72},{n:"Atención al detalle",v:76},{n:"Tolerancia a la presión",v:74}]} },
+        skills:[{n:"Python",v:75},{n:"SQL",v:70},{n:"Azure",v:70},{n:"Spark",v:60},{n:"ML",v:50},{n:"Power BI",v:50}] },
     ]
   },
   {
@@ -1596,11 +1669,9 @@ const liderVacancies = [
     assigned:"Asignada hace 3 días", sla:"Vence en 3 días", slaUrgent:false,
     candidates:[
       { label:"Candidato HSE-001", score:90, exp:"7 – 9 años", assigned:"Asignado hace 2 días",
-        skills:[{n:"Normatividad SST",v:95},{n:"ISO 45001",v:90},{n:"Gestión de riesgos",v:88},{n:"Auditorías",v:80},{n:"Manejo de emergencias",v:85},{n:"Reporting",v:75}],
-        bluesite:{status:"aprobada", match:91, skills:[{n:"Estabilidad emocional",v:90},{n:"Atención al detalle",v:88},{n:"Tolerancia a la presión",v:92}]} },
+        skills:[{n:"Normatividad SST",v:95},{n:"ISO 45001",v:90},{n:"Gestión de riesgos",v:88},{n:"Auditorías",v:80},{n:"Manejo de emergencias",v:85},{n:"Reporting",v:75}] },
       { label:"Candidato HSE-002", score:79, exp:"4 – 6 años", assigned:"Asignado hace 2 días",
-        skills:[{n:"Normatividad SST",v:82},{n:"ISO 45001",v:75},{n:"Gestión de riesgos",v:78},{n:"Auditorías",v:65},{n:"Manejo de emergencias",v:70},{n:"Reporting",v:68}],
-        bluesite:{status:"aprobada", match:77, skills:[{n:"Estabilidad emocional",v:74},{n:"Atención al detalle",v:78},{n:"Tolerancia a la presión",v:76}]} },
+        skills:[{n:"Normatividad SST",v:82},{n:"ISO 45001",v:75},{n:"Gestión de riesgos",v:78},{n:"Auditorías",v:65},{n:"Manejo de emergencias",v:70},{n:"Reporting",v:68}] },
     ]
   },
   {
@@ -1608,8 +1679,7 @@ const liderVacancies = [
     assigned:"Asignada hace 2 horas", sla:"Vence en 3 días", slaUrgent:false,
     candidates:[
       { label:"Candidato CONT-001", score:88, exp:"5 – 7 años", assigned:"Asignado hace 2 horas",
-        skills:[{n:"NIIF",v:90},{n:"Conciliaciones",v:88},{n:"Excel avanzado",v:92},{n:"SAP",v:80},{n:"Impuestos",v:78},{n:"Auditoría",v:75}],
-        bluesite:{status:"aprobada", match:85, skills:[{n:"Estabilidad emocional",v:82},{n:"Atención al detalle",v:87},{n:"Tolerancia a la presión",v:84}]} },
+        skills:[{n:"NIIF",v:90},{n:"Conciliaciones",v:88},{n:"Excel avanzado",v:92},{n:"SAP",v:80},{n:"Impuestos",v:78},{n:"Auditoría",v:75}] },
     ]
   },
 ];
@@ -1618,30 +1688,35 @@ let currentVacancy = null;
 const liderDecisions = {}; // key `${vacId}-${idx}` -> 'approved' | 'rejected'
 let liderVacPage = 1;
 const liderVacPageSize = 2;
-function goLiderVacPage(p){ liderVacPage = p; renderLiderVacancies(); }
+function goLiderVacPage(p){ liderVacPage = p; renderLiderVacTable(); }
 
 function pendingCount(vac){
   return vac.candidates.filter((c,i)=> !liderDecisions[`${vac.id}-${i}`]).length;
 }
 
-function renderLiderVacancies(){
-  const row = document.getElementById('vacSelectRow');
+function renderLiderVacTable(){
+  const tbody = document.getElementById('liderVacTableBody');
   const pag = document.getElementById('liderVacPagination');
   const totalPages = Math.max(1, Math.ceil(liderVacancies.length/liderVacPageSize));
   if (liderVacPage > totalPages) liderVacPage = totalPages;
   const startIdx = (liderVacPage-1)*liderVacPageSize;
   const pageItems = liderVacancies.slice(startIdx, startIdx+liderVacPageSize);
-  row.innerHTML = pageItems.map(v => `
-    <button class="vac-select-card ${currentVacancy===v.id ? 'selected':''}" onclick="selectVacancy(${v.id})">
-      <div class="vac-select-top">
-        <div>
-          <div class="vac-select-title">${v.title}</div>
-          <div class="vac-select-sub">${v.dept} · ${v.assigned}</div>
+  tbody.innerHTML = pageItems.map(v => `
+    <tr class="vac-row ${currentVacancy===v.id ? 'selected':''}" onclick="selectVacancy(${v.id})">
+      <td>
+        <div class="vac-name-cell">
+          <div class="vac-icon" style="background:#E9F5FA;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--geb-primario)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </div>
+          <div>
+            <div class="vac-title">${v.title}</div>
+            <div class="vac-sub">${v.dept} · ${v.assigned}</div>
+          </div>
         </div>
-        <span class="vac-pend-pill">${pendingCount(v)} pend.</span>
-      </div>
-      <span class="sla-pill ${v.slaUrgent ? 'urgent':''}">${v.slaUrgent ? '⚠ ' : ''}SLA: ${v.sla}</span>
-    </button>
+      </td>
+      <td><span class="vac-pend-pill">${pendingCount(v)} pend.</span></td>
+      <td><span class="sla-pill ${v.slaUrgent ? 'urgent':''}">${v.slaUrgent ? '⚠ ' : ''}${v.sla}</span></td>
+    </tr>
   `).join('');
   pag.innerHTML = paginationHtml(liderVacancies.length, liderVacPage, liderVacPageSize, 'goLiderVacPage');
 }
@@ -1649,8 +1724,8 @@ function renderLiderVacancies(){
 function selectVacancy(id){
   currentVacancy = id;
   liderCandPage = 1;
-  renderLiderVacancies();
-  renderReportGrid();
+  renderLiderVacTable();
+  renderReportTable();
 }
 
 function skillBarsLider(skills){
@@ -1661,86 +1736,117 @@ function skillBarsLider(skills){
     </div>`).join('');
 }
 
-const evalMeta = {
-  "aprobada": {label:"Aprobada", cls:"green"},
-  "pendiente": {label:"Pendiente", cls:"gray"},
-  "rechazada": {label:"Rechazada", cls:"magenta"},
-};
-function evalPill(status){
-  const m = evalMeta[status] || {label:status, cls:'gray'};
-  return `<span class="mini-pill ${m.cls}">${m.label}</span>`;
-}
-
 let liderCandPage = 1;
 const liderCandPageSize = 2;
-function goLiderCandPage(p){ liderCandPage = p; renderReportGrid(); }
+function goLiderCandPage(p){ liderCandPage = p; renderReportTable(); }
 
-function renderReportGrid(){
+function renderReportTable(){
   const vac = liderVacancies.find(v=>v.id===currentVacancy);
-  const grid = document.getElementById('reportGrid');
+  const tbody = document.getElementById('reportTableBody');
   const pag = document.getElementById('reportPagination');
   const totalPages = Math.max(1, Math.ceil(vac.candidates.length/liderCandPageSize));
   if (liderCandPage > totalPages) liderCandPage = totalPages;
   const startIdx = (liderCandPage-1)*liderCandPageSize;
-  const cards = vac.candidates.map((c,i) => {
+  const pageIdx = [];
+  for (let i=startIdx; i<Math.min(startIdx+liderCandPageSize, vac.candidates.length); i++) pageIdx.push(i);
+
+  tbody.innerHTML = pageIdx.map(i => {
+    const c = vac.candidates[i];
     const key = `${vac.id}-${i}`;
     const decision = liderDecisions[key];
-    const gaugeColor = c.score>=90 ? 'var(--geb-lime)' : c.score>=80 ? 'var(--geb-skyblue)' : 'var(--geb-gray)';
-    const bs = c.bluesite || {status:'pendiente'};
-    const bsBody = bs.match !== undefined
-      ? `<div class="rc-bluesite-match"><span>Match psicotécnico</span><strong>${bs.match}%</strong></div>${skillBarsLider(bs.skills)}`
-      : `<p class="rc-bluesite-empty">Aún no hay resultados de Bluesite para esta persona candidata. La seguridad y el examen médico se habilitan en etapas posteriores del proceso.</p>`;
-    const actions = decision
-      ? `<div class="rc-decided-tag ${decision==='approved'?'approved':'rejected'}">
-          ${decision==='approved' ? '✓ Aprobado' : '✕ Rechazado'}
-        </div>`
-      : `<div class="rc-actions">
-          <button class="rc-approve" onclick="decide('${key}','approved')">✓ Aprobar</button>
-          <button class="rc-reject" onclick="decide('${key}','rejected')">✕ Rechazar</button>
-        </div>`;
-    return `
-      <div class="report-card ${decision ? 'decided':''}">
-        <div class="report-card-head">
+    return `<tr class="vac-row">
+      <td>
+        <div class="vac-name-cell">
+          <div class="vac-icon" style="background:#EAF3FC;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--geb-info)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+          </div>
           <div>
-            <div class="rc-name">${c.label}</div>
-            <div class="rc-role">${vac.title}</div>
+            <div class="vac-title">${c.label}</div>
+            <div class="vac-sub">${vac.title}</div>
           </div>
-          <span class="rc-assigned">${c.assigned}</span>
         </div>
-        <div class="rc-gauge-block">
-          ${gaugeSvg(c.score, gaugeColor, 'sm', '', '')}
-          <div class="rc-gauge-caption">Puntuación IA / 100 · perfil de este cargo</div>
-        </div>
-        <div class="rc-section">
-          <div class="rc-section-label">Habilidades clave</div>
-          ${skillBarsLider(c.skills)}
-        </div>
-        <div class="rc-section">
-          <div class="rc-section-label">Experiencia</div>
-          <div class="rc-exp-value">${c.exp}</div>
-        </div>
-        <div class="rc-section">
-          <div class="rc-section-label" style="display:flex; align-items:center; justify-content:space-between;">
-            <span>Evaluación psicotécnica · Bluesite</span>
-            ${evalPill(bs.status)}
-          </div>
-          ${bsBody}
-        </div>
-        <div class="rc-section">
-          <div class="rc-section-label">Comentarios para el equipo de selección</div>
-          <textarea class="rc-comment" placeholder="Sus comentarios viajan de regreso al Portal del Reclutador…" ${decision?'disabled':''}></textarea>
-        </div>
-        ${actions}
-      </div>`;
-  });
-  grid.innerHTML = cards.slice(startIdx, startIdx+liderCandPageSize).join('');
+      </td>
+      <td><span class="cand-score ${c.score>=90?'':c.score>=80?'mid':'low'}" style="width:34px; height:34px; font-size:11.5px;">${c.score}</span></td>
+      <td class="detail-text">${c.exp}</td>
+      <td>${decision ? `<span class="mini-pill ${decision==='approved'?'green':'magenta'}">${decision==='approved'?'Aprobado':'Rechazado'}</span>` : `<span class="mini-pill graylight">Pendiente</span>`}</td>
+      <td>
+        <button class="eye-btn" onclick="openCandidateModal(${vac.id}, ${i})" title="Ver detalle completo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
   pag.innerHTML = paginationHtml(vac.candidates.length, liderCandPage, liderCandPageSize, 'goLiderCandPage');
+}
+
+function buildCandidateCardHtml(vac, c, i){
+  const key = `${vac.id}-${i}`;
+  const decision = liderDecisions[key];
+  const gaugeColor = c.score>=90 ? 'var(--geb-lime)' : c.score>=80 ? 'var(--geb-skyblue)' : 'var(--geb-gray)';
+  const actions = decision
+    ? `<div class="rc-decided-tag ${decision==='approved'?'approved':'rejected'}">
+        ${decision==='approved' ? '✓ Aprobado' : '✕ Rechazado'}
+      </div>`
+    : `<div class="rc-actions">
+        <button class="rc-approve" onclick="decide('${key}','approved')">✓ Aprobar</button>
+        <button class="rc-reject" onclick="decide('${key}','rejected')">✕ Rechazar</button>
+      </div>`;
+  return `
+    <div class="report-card-head">
+      <div>
+        <div class="rc-name">${c.label}</div>
+        <div class="rc-role">${vac.title}</div>
+      </div>
+      <span class="rc-assigned">${c.assigned}</span>
+    </div>
+    <div class="rc-gauge-block">
+      ${gaugeSvg(c.score, gaugeColor, 'sm', '', '')}
+      <div class="rc-gauge-caption">Puntuación IA / 100 · perfil de este cargo</div>
+    </div>
+    <div class="rc-section">
+      <div class="rc-section-label">Habilidades clave (según hoja de vida)</div>
+      ${skillBarsLider(c.skills)}
+    </div>
+    <div class="rc-section">
+      <div class="rc-section-label">Experiencia</div>
+      <div class="rc-exp-value">${c.exp}</div>
+    </div>
+    <div class="rc-section">
+      <div class="info-banner" style="margin:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+        Esta persona candidata todavía no ha presentado pruebas psicotécnicas, de seguridad ni médicas. Lo que ve aquí corresponde solo a su hoja de vida anonimizada y al ranking generado por Selecta; las evaluaciones con terceros se activan si usted la aprueba.
+      </div>
+    </div>
+    <div class="rc-section">
+      <div class="rc-section-label">Comentarios para el equipo de selección</div>
+      <textarea class="rc-comment" placeholder="Sus comentarios viajan de regreso al Portal del Reclutador…" ${decision?'disabled':''}></textarea>
+    </div>
+    ${actions}
+  `;
+}
+
+function openCandidateModal(vacId, idx){
+  const vac = liderVacancies.find(v=>v.id===vacId);
+  const c = vac.candidates[idx];
+  document.getElementById('candidateModalContent').innerHTML = buildCandidateCardHtml(vac, c, idx);
+  document.getElementById('candidateModalOverlay').style.display = 'flex';
+}
+
+function closeCandidateModal(){
+  document.getElementById('candidateModalOverlay').style.display = 'none';
 }
 
 function decide(key, decision){
   liderDecisions[key] = decision;
-  renderLiderVacancies();
-  renderReportGrid();
+  renderLiderVacTable();
+  renderReportTable();
+  const overlay = document.getElementById('candidateModalOverlay');
+  if (overlay.style.display !== 'none'){
+    const [vacIdStr, idxStr] = key.split('-');
+    const vac = liderVacancies.find(v=>v.id===parseInt(vacIdStr));
+    const idx = parseInt(idxStr);
+    document.getElementById('candidateModalContent').innerHTML = buildCandidateCardHtml(vac, vac.candidates[idx], idx);
+  }
 }
 </script>
 </body>
