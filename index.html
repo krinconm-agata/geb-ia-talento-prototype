@@ -267,6 +267,11 @@
   .cand-row:hover{ background:var(--bg-page);}
   .cand-row.selected{ background:#EEF3FC; border-color:#D3E1F5;}
   .cand-checkbox{ flex:none; width:16px; height:16px; accent-color:var(--geb-primario); cursor:pointer;}
+  .cand-checkbox:disabled{ cursor:not-allowed; opacity:.4;}
+  .phone-btn{ flex:none; width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:#fff; display:flex; align-items:center; justify-content:center; color:var(--geb-primario);}
+  .phone-btn:hover:not(:disabled){ border-color:var(--geb-primario); background:#F4F8FD;}
+  .phone-btn.done{ background:#EBF7E1; border-color:var(--geb-secundario); color:var(--geb-secundario); cursor:default;}
+  .info-adicional-section{ margin-top:18px; padding-top:16px; border-top:1px solid var(--line);}
   .bulk-action-bar{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     background:#EEF3FC; border:1px solid #D3E1F5; border-radius:10px;
@@ -816,6 +821,15 @@
 
     </div>
   </div>
+
+  <div id="prefiltroModalOverlay" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closePrefiltroModal()">
+    <div class="modal-panel">
+      <button class="modal-close" onclick="closePrefiltroModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div id="prefiltroModalContent"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ============ LIDER PORTAL ============ -->
@@ -887,7 +901,7 @@
           <h1>Informe Incógnito</h1>
           <p>Evaluación libre de sesgos — la identidad se revela solo tras su decisión.</p>
         </div>
-        <div class="guia-wrap">
+        <div class="guia-wrap" id="guiaWrap">
           <button class="guia-btn" onclick="document.getElementById('guiaTooltip').classList.toggle('show')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2 1.8-2 3.5"/><path d="M12 17h.01"/></svg>
             Guía de evaluación
@@ -905,7 +919,7 @@
         </div>
       </div>
 
-      <div class="blind-banner">
+      <div class="blind-banner" id="blindBanner">
         <span class="icon-wrap">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8A6A10" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
         </span>
@@ -924,13 +938,16 @@
         <div id="liderVacPagination"></div>
       </div>
 
+      <div class="section-label" style="margin-top:6px;">Etapas del líder</div>
+      <div class="step-rail" id="liderStepRail"></div>
+
       <div class="report-section-header">
-        <h3>Informes anonimizados</h3>
-        <span>Haga clic en el ícono de ojo para evaluar y decidir</span>
+        <h3 id="liderSectionTitle">Informes anonimizados</h3>
+        <span id="liderSectionHint">Haga clic en el ícono de ojo para evaluar y decidir</span>
       </div>
       <div class="card vacancy-card">
         <table class="vac-table">
-          <thead><tr><th>Candidato</th><th>Puntuación IA</th><th>Experiencia</th><th>Decisión</th><th></th></tr></thead>
+          <thead id="reportTableHead"></thead>
           <tbody id="reportTableBody"></tbody>
         </table>
         <div id="reportPagination"></div>
@@ -1039,6 +1056,7 @@ const candidates = [
     location:"Bogotá, Colombia", linkedin:"linkedin.com/in/juanperez", role:"Analista Financiero",
     match:98,
     skills:[{name:"Modelado financiero",value:96},{name:"Excel avanzado",value:98},{name:"Análisis de riesgo",value:91}],
+    infoAdicional:[{label:"Pretensión salarial",value:"$7.2M COP"},{label:"Disponibilidad",value:"Inmediata"},{label:"Modalidad preferida",value:"Híbrida"}],
     timeline:["done","done","done","done","current","pending"],
     timelineTimes:["28/06 · 09:15 a. m.","28/06 · 09:20 a. m.","28/06 · 09:45 a. m.","01/07 · 11:10 a. m.","08/07 · 10:30 a. m.",null],
     bluesite:{status:"aprobado", update:"Hace 5 días"},
@@ -1052,6 +1070,7 @@ const candidates = [
     location:"Bogotá, Colombia", linkedin:"linkedin.com/in/anatorres", role:"Analista Financiero",
     match:92,
     skills:[{name:"Modelado financiero",value:90},{name:"Excel avanzado",value:94},{name:"Análisis de riesgo",value:86}],
+    infoAdicional:[{label:"Pretensión salarial",value:"$6.5M COP"},{label:"Disponibilidad",value:"15 días"},{label:"Modalidad preferida",value:"Remota"}],
     timeline:["done","done","done","current","pending","pending"],
     timelineTimes:["29/06 · 08:40 a. m.","29/06 · 08:50 a. m.","29/06 · 09:30 a. m.","09/07 · 03:15 p. m.",null,null],
     bluesite:{status:"aprobado", update:"Hace 2 días"},
@@ -1064,6 +1083,7 @@ const candidates = [
     location:"Medellín, Colombia", linkedin:"linkedin.com/in/camilarodriguez", role:"Analista Financiero",
     match:89,
     skills:[{name:"Modelado financiero",value:87},{name:"Excel avanzado",value:90},{name:"Análisis de riesgo",value:84}],
+    infoAdicional:[{label:"Pretensión salarial",value:"$6.0M COP"},{label:"Disponibilidad",value:"30 días"},{label:"Modalidad preferida",value:"Híbrida"}],
     timeline:["done","done","done","current","pending","pending"],
     timelineTimes:["29/06 · 09:05 a. m.","29/06 · 09:12 a. m.","29/06 · 09:50 a. m.","10/07 · 09:00 a. m.",null,null],
     bluesite:{status:"rechazado", update:"Hace 1 día"},
@@ -1076,6 +1096,7 @@ const candidates = [
     location:"Bogotá, Colombia", linkedin:"linkedin.com/in/andresgomez", role:"Analista Financiero",
     match:85,
     skills:[{name:"Modelado financiero",value:83},{name:"Excel avanzado",value:88},{name:"Análisis de riesgo",value:79}],
+    infoAdicional:[{label:"Pretensión salarial",value:"$5.5M COP"},{label:"Disponibilidad",value:"Inmediata"},{label:"Modalidad preferida",value:"Presencial"}],
     timeline:["done","done","done","current","pending","pending"],
     timelineTimes:["30/06 · 08:20 a. m.","30/06 · 08:30 a. m.","30/06 · 09:15 a. m.","05/07 · 10:00 a. m.",null,null],
     bluesite:{status:"aprobado", update:"Hace 4 días"},
@@ -1088,8 +1109,61 @@ const candidates = [
     location:"Cali, Colombia", linkedin:"linkedin.com/in/lauramartinez", role:"Analista Financiero",
     match:81,
     skills:[{name:"Modelado financiero",value:78},{name:"Excel avanzado",value:85},{name:"Análisis de riesgo",value:74}],
+    infoAdicional:[{label:"Pretensión salarial",value:"$5.8M COP"},{label:"Disponibilidad",value:"Inmediata"},{label:"Modalidad preferida",value:"Híbrida"}],
     timeline:["done","done","done","pending","pending","pending"],
     timelineTimes:["30/06 · 09:40 a. m.","30/06 · 09:48 a. m.","30/06 · 10:20 a. m.",null,null,null],
+    bluesite:{status:"no-iniciado", update:"Sin iniciar"},
+    cosinte:{status:"no-iniciado", update:"Sin iniciar"},
+    medilaboral:{status:"no-iniciado", update:"Sin iniciar"},
+  },
+  {
+    id:6, name:"Diego Ramírez", initials:"DR", grad:["var(--geb-primario)","var(--geb-teal)"],
+    exp:"9 años de experiencia", email:"diego.ramirez@email.com", phone:"+57 305 678 9012",
+    location:"Bogotá, Colombia", linkedin:"linkedin.com/in/diegoramirez", role:"Analista Financiero",
+    match:79,
+    skills:[{name:"Modelado financiero",value:80},{name:"Excel avanzado",value:82},{name:"Análisis de riesgo",value:76}],
+    infoAdicional:[{label:"Pretensión salarial",value:"$6.1M COP"},{label:"Disponibilidad",value:"30 días"},{label:"Modalidad preferida",value:"Presencial"}],
+    timeline:["done","done","done","pending","pending","pending"],
+    timelineTimes:["01/07 · 08:10 a. m.","01/07 · 08:18 a. m.","01/07 · 08:50 a. m.",null,null,null],
+    bluesite:{status:"no-iniciado", update:"Sin iniciar"},
+    cosinte:{status:"no-iniciado", update:"Sin iniciar"},
+    medilaboral:{status:"no-iniciado", update:"Sin iniciar"},
+  },
+  {
+    id:7, name:"Valentina Cruz", initials:"VC", grad:["var(--geb-green)","var(--geb-teal)"],
+    exp:"3 años de experiencia", email:"valentina.cruz@email.com", phone:"+57 306 789 0123",
+    location:"Barranquilla, Colombia", linkedin:"linkedin.com/in/valentinacruz", role:"Analista Financiero",
+    match:74,
+    skills:[{name:"Modelado financiero",value:70},{name:"Excel avanzado",value:80},{name:"Análisis de riesgo",value:68}],
+    infoAdicional:[{label:"Pretensión salarial",value:"$4.9M COP"},{label:"Disponibilidad",value:"15 días"},{label:"Modalidad preferida",value:"Remota"}],
+    timeline:["done","done","done","pending","pending","pending"],
+    timelineTimes:["01/07 · 09:20 a. m.","01/07 · 09:28 a. m.","01/07 · 10:05 a. m.",null,null,null],
+    bluesite:{status:"no-iniciado", update:"Sin iniciar"},
+    cosinte:{status:"no-iniciado", update:"Sin iniciar"},
+    medilaboral:{status:"no-iniciado", update:"Sin iniciar"},
+  },
+  {
+    id:8, name:"Óscar Peña", initials:"OP", grad:["var(--geb-gray)","var(--geb-skyblue)"],
+    exp:"5 años de experiencia", email:"oscar.pena@email.com", phone:"+57 307 890 1234",
+    location:"Bogotá, Colombia", linkedin:"linkedin.com/in/oscarpena", role:"Analista Financiero",
+    match:0, noScore:true,
+    skills:[{name:"Modelado financiero",value:0},{name:"Excel avanzado",value:0},{name:"Análisis de riesgo",value:0}],
+    infoAdicional:[{label:"Pretensión salarial",value:"No registrada"},{label:"Disponibilidad",value:"No registrada"},{label:"Modalidad preferida",value:"No registrada"}],
+    timeline:["done","done","pending","pending","pending","pending"],
+    timelineTimes:["02/07 · 08:00 a. m.","02/07 · 08:05 a. m.",null,null,null,null],
+    bluesite:{status:"no-iniciado", update:"Sin iniciar"},
+    cosinte:{status:"no-iniciado", update:"Sin iniciar"},
+    medilaboral:{status:"no-iniciado", update:"Sin iniciar"},
+  },
+  {
+    id:9, name:"Natalia Ríos", initials:"NR", grad:["var(--geb-magenta)","var(--geb-orange)"],
+    exp:"2 años de experiencia", email:"natalia.rios@email.com", phone:"+57 308 901 2345",
+    location:"Medellín, Colombia", linkedin:"linkedin.com/in/nataliarios", role:"Analista Financiero",
+    match:0, noScore:true,
+    skills:[{name:"Modelado financiero",value:0},{name:"Excel avanzado",value:0},{name:"Análisis de riesgo",value:0}],
+    infoAdicional:[{label:"Pretensión salarial",value:"No registrada"},{label:"Disponibilidad",value:"No registrada"},{label:"Modalidad preferida",value:"No registrada"}],
+    timeline:["done","done","pending","pending","pending","pending"],
+    timelineTimes:["02/07 · 09:15 a. m.","02/07 · 09:20 a. m.",null,null,null,null],
     bluesite:{status:"no-iniciado", update:"Sin iniciar"},
     cosinte:{status:"no-iniciado", update:"Sin iniciar"},
     medilaboral:{status:"no-iniciado", update:"Sin iniciar"},
@@ -1118,6 +1192,7 @@ let selectedCandidate = {1:null, 2:null, 3:null, 4:null, 5:null, 6:null};
 const offerGenerated = {}; // candId -> true once an offer has been generated
 const selectaAction = {}; // candId -> 'sent' (anonimizado y enviado al líder) | 'rejected'
 let checkedForAnon = new Set(); // candId set, checkboxes in Selecta step
+const prefiltro = {}; // candId -> form data object once the phone pre-filter is saved
 
 /* ===================== HELPERS ===================== */
 function scoreClass(v){ if (v>=90) return ''; if (v>=80) return 'mid'; return 'low'; }
@@ -1234,7 +1309,10 @@ function badgeFor(step, c){
   if (step === 6) {
     return offerGenerated[c.id] ? `<span class="mini-pill green">Oferta enviada</span>` : `<span class="mini-pill graylight">Sin oferta</span>`;
   }
-  if (step === 1) return `<span class="cand-score ${scoreClass(c.match)}">${c.match}</span>`;
+  if (step === 1){
+    if (c.noScore) return `<span class="mini-pill gold decision" title="La IA no pudo calificar a esta persona candidata">⚠ Sin puntaje</span>`;
+    return `<span class="cand-score ${scoreClass(c.match)}">${c.match}</span>`;
+  }
   if (step === 3) return pill(c.bluesite.status);
   if (step === 4) return pill(c.cosinte.status);
   if (step === 5) return pill(c.medilaboral.status);
@@ -1267,7 +1345,7 @@ function paginationHtml(total, page, pageSize, onClickFnName){
 }
 
 let rankingPage = 1;
-const rankingPageSize = 3;
+const rankingPageSize = 5;
 function goRankingPage(p){ rankingPage = p; renderRanking(); }
 
 function renderRanking(){
@@ -1281,9 +1359,16 @@ function renderRanking(){
   const rows = pageItems.map((c,localI)=>{
     const i = startIdx+localI;
     const sel = selectedCandidate[currentStep] === c.id ? 'selected' : '';
+    const hasPrefiltro = !!prefiltro[c.id];
     const checkbox = isSelecta
-      ? `<input type="checkbox" class="cand-checkbox" ${checkedForAnon.has(c.id)?'checked':''}
+      ? `<input type="checkbox" class="cand-checkbox" ${checkedForAnon.has(c.id)?'checked':''} ${hasPrefiltro?'':'disabled title="Requiere prefiltro telefónico"'}
           onclick="event.stopPropagation()" onchange="toggleAnonCheck(${c.id}, this.checked)">`
+      : '';
+    const phoneBtn = isSelecta
+      ? `<button class="phone-btn ${hasPrefiltro?'done':''}" ${hasPrefiltro?'disabled':''} title="${hasPrefiltro?'Prefiltro telefónico realizado':'Realizar prefiltro telefónico'}"
+          onclick="event.stopPropagation(); openPrefiltroModal(${c.id})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg>
+        </button>`
       : '';
     return `<div class="cand-row ${sel}" data-cid="${c.id}">
       ${checkbox}
@@ -1293,9 +1378,11 @@ function renderRanking(){
         <div class="cand-name">${c.name}</div>
         <div class="cand-exp">${c.exp}</div>
       </span>
+      ${phoneBtn}
       ${badgeFor(currentStep, c)}
     </div>`;
   }).join('');
+  const eligibles = [...checkedForAnon].filter(id => prefiltro[id]);
   const bulkBar = (isSelecta && checkedForAnon.size > 0) ? `
     <div class="bulk-action-bar">
       <span>${checkedForAnon.size} seleccionada${checkedForAnon.size>1?'s':''}</span>
@@ -1306,10 +1393,6 @@ function renderRanking(){
       <h3>Lista de candidatos</h3>
       <span class="ranking-count">${candidates.length} de 12</span>
     </div>
-    ${isSelecta ? `<button class="filter-btn" id="recalcBtn" onclick="recalcularSelecta()" style="margin-bottom:10px; width:100%; justify-content:center;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
-      Recalcular ranking
-    </button>` : ''}
     ${bulkBar}
     <div class="cand-list">${rows}</div>
     ${paginationHtml(candidates.length, rankingPage, rankingPageSize, 'goRankingPage')}
@@ -1323,32 +1406,13 @@ function renderRanking(){
   });
 }
 
-function recalcularSelecta(){
-  const btn = document.getElementById('recalcBtn');
-  if (btn){ btn.disabled = true; btn.innerHTML = 'Recalculando…'; }
-  setTimeout(()=>{
-    candidates.forEach(c => {
-      const delta = Math.round((Math.random()*6)-3); // ajuste de -3 a +3 puntos
-      c.match = Math.max(60, Math.min(99, c.match + delta));
-      c.skills.forEach(s => {
-        const d2 = Math.round((Math.random()*6)-3);
-        s.value = Math.max(50, Math.min(100, s.value + d2));
-      });
-    });
-    candidates.sort((a,b) => b.match - a.match);
-    rankingPage = 1;
-    renderRanking();
-    renderResults();
-  }, 650);
-}
-
 function toggleAnonCheck(candId, checked){
   if (checked) checkedForAnon.add(candId); else checkedForAnon.delete(candId);
   renderRanking();
 }
 
 function bulkAnonimizar(){
-  checkedForAnon.forEach(id => { selectaAction[id] = 'sent'; });
+  checkedForAnon.forEach(id => { if (prefiltro[id]) selectaAction[id] = 'sent'; });
   checkedForAnon.clear();
   renderRanking();
   renderResults();
@@ -1411,19 +1475,34 @@ function renderResults(){
   const c = candidates.find(x=>x.id===cid);
 
   if (currentStep === 1){
+    const infoRows = (c.infoAdicional || []).map((d,idx) => `
+      <div class="rc-eval-row"><span>${d.label}</span><strong>${d.value}</strong></div>`).join('');
+    const scoreArea = c.noScore
+      ? `<div class="results-head">
+           <div>
+             <div class="eyebrow">Resultado Selecta</div>
+             <h3>${c.name} · Analista Financiero</h3>
+           </div>
+         </div>
+         <div class="eval-decided warning" style="margin-top:0;">⚠ La IA no pudo calificar a esta persona candidata. Revise su hoja de vida manualmente antes de continuar.</div>`
+      : `<div class="results-head">
+           <div>
+             <div class="eyebrow">Resultado Selecta</div>
+             <h3>${c.name} · compatibilidad con Analista Financiero</h3>
+           </div>
+           ${gaugeSvg(c.match, 'var(--geb-lime)', 'sm')}
+         </div>
+         ${skillBars(c.skills)}`;
     el.innerHTML = `
-      <div class="results-head">
-        <div>
-          <div class="eyebrow">Resultado Selecta</div>
-          <h3>${c.name} · compatibilidad con Analista Financiero</h3>
-        </div>
-        ${gaugeSvg(c.match, 'var(--geb-lime)', 'sm')}
+      ${scoreArea}
+      <div class="info-adicional-section">
+        <div class="rc-section-label">Información adicional</div>
+        ${infoRows}
+        <button class="detail-link-btn" onclick="openCandidate(${c.id})" style="margin-top:14px;">
+          Ver detalle completo
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
       </div>
-      ${skillBars(c.skills)}
-      <button class="detail-link-btn" onclick="openCandidate(${c.id})">
-        Ver detalle completo
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </button>
       ${selectaActionBlock(c)}
     `;
     return;
@@ -1469,6 +1548,15 @@ function selectaActionBlock(c){
   if (action === 'rejected'){
     return `<div class="eval-decided rejected">✕ Rechazada por ti</div>`;
   }
+  if (!prefiltro[c.id]){
+    return `<div class="eval-decision" style="flex-direction:column; gap:8px;">
+      <div class="eval-decided warning" style="margin-top:0;">⚠ Requiere prefiltro telefónico antes de enviar al líder</div>
+      <div style="display:flex; gap:10px;">
+        <button class="eval-approve" style="flex:1;" onclick="openPrefiltroModal(${c.id})">📞 Realizar prefiltro telefónico</button>
+        <button class="eval-reject" onclick="decideSelecta(${c.id},'rejected')">✕ Rechazar</button>
+      </div>
+    </div>`;
+  }
   return `<div class="eval-decision">
     <button class="eval-approve" onclick="decideSelecta(${c.id},'sent')">Anonimizar y enviar a líder</button>
     <button class="eval-reject" onclick="decideSelecta(${c.id},'rejected')">✕ Rechazar</button>
@@ -1484,6 +1572,70 @@ function decideSelecta(candId, action){
 
 function generateOffer(candId){
   offerGenerated[candId] = true;
+  renderRanking();
+  renderResults();
+}
+
+/* ===================== PREFILTRO TELEFÓNICO ===================== */
+let prefiltroCandId = null;
+const prefiltroFields = [
+  { key:"cumplePerfil", label:"Validación de cumplimiento de perfil", type:"select", options:["Cumple","Cumple parcialmente","No cumple"] },
+  { key:"interesContinuidad", label:"Validación de interés de continuidad en el proceso", type:"select", options:["Interesado","Indeciso","No interesado"] },
+  { key:"desempeno", label:"Resultado de evaluación de desempeño del último año", type:"select", options:["Sobresaliente","Satisfactorio","Por mejorar"] },
+  { key:"vinculacion", label:"Tiempo de vinculación en la compañía", type:"text", placeholder:"Ej: 3 años 2 meses" },
+  { key:"sancionado", label:"¿Ha sido sancionado en el último año?", type:"select", options:["No","Sí"] },
+  { key:"promovido", label:"¿Ha sido promovido en el último año?", type:"select", options:["No","Sí"] },
+  { key:"fechaFiltro", label:"Fecha de filtro telefónico", type:"date" },
+];
+
+function openPrefiltroModal(candId){
+  prefiltroCandId = candId;
+  const c = candidates.find(x=>x.id===candId);
+  const saved = prefiltro[candId] || {};
+  const fieldsHtml = prefiltroFields.map(f => {
+    let input;
+    if (f.type === 'select'){
+      input = `<select class="field-input" data-key="${f.key}">
+        <option value="">Seleccione…</option>
+        ${f.options.map(o => `<option ${saved[f.key]===o?'selected':''}>${o}</option>`).join('')}
+      </select>`;
+    } else if (f.type === 'date'){
+      input = `<input type="date" class="field-input" data-key="${f.key}" value="${saved[f.key]||''}">`;
+    } else {
+      input = `<input type="text" class="field-input" data-key="${f.key}" placeholder="${f.placeholder||''}" value="${saved[f.key]||''}">`;
+    }
+    return `<div class="field-group"><label class="field-label">${f.label}</label>${input}</div>`;
+  }).join('');
+  document.getElementById('prefiltroModalContent').innerHTML = `
+    <div class="report-card-head" style="padding-right:34px; margin-bottom:16px;">
+      <div>
+        <div class="rc-name">Prefiltro telefónico</div>
+        <div class="rc-role">${c.name} · ${c.role}</div>
+      </div>
+    </div>
+    <div class="info-banner" style="margin-bottom:18px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+      Complete el prefiltro con base en la llamada. Al enviar, será redirigido a SAP SuccessFactors para verificar que quedó guardado allá.
+    </div>
+    ${fieldsHtml}
+    <button class="eval-btn" style="margin-top:8px;" onclick="savePrefiltro()">
+      Guardar y verificar en SuccessFactors
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+    </button>
+  `;
+  document.getElementById('prefiltroModalOverlay').style.display = 'flex';
+}
+
+function closePrefiltroModal(){
+  document.getElementById('prefiltroModalOverlay').style.display = 'none';
+}
+
+function savePrefiltro(){
+  const inputs = document.querySelectorAll('#prefiltroModalContent [data-key]');
+  const data = {};
+  inputs.forEach(inp => { data[inp.dataset.key] = inp.value; });
+  prefiltro[prefiltroCandId] = data;
+  closePrefiltroModal();
   renderRanking();
   renderResults();
 }
@@ -1629,7 +1781,7 @@ function enterPortal(role){
     if (!recruiterInitDone){ renderMain(); recruiterInitDone = true; }
   } else if (role === 'lider'){
     document.getElementById('liderApp').style.display = 'grid';
-    if (!liderInitDone){ renderLiderVacTable(); selectVacancy(liderVacancies[0].id); liderInitDone = true; }
+    if (!liderInitDone){ renderLiderRail(); renderLiderVacTable(); selectVacancy(liderVacancies[0].id); liderInitDone = true; }
   }
   window.scrollTo(0,0);
 }
@@ -1654,13 +1806,13 @@ const liderVacancies = [
     id:1, title:"Ingeniero de Datos Senior", dept:"Tecnología",
     assigned:"Asignada hace 1 día", sla:"Vence hoy", slaUrgent:true,
     candidates:[
-      { label:"Candidato DATA-001", score:98, exp:"6 – 8 años", assigned:"Asignado hace 1 día",
+      { label:"Candidato DATA-001", name:"Mariana Ospina", score:98, exp:"6 – 8 años", assigned:"Asignado hace 1 día",
         skills:[{n:"Python",v:100},{n:"SQL",v:95},{n:"Azure",v:90},{n:"Spark",v:90},{n:"ML",v:85},{n:"Power BI",v:80}] },
-      { label:"Candidato DATA-002", score:92, exp:"5 – 7 años", assigned:"Asignado hace 1 día",
+      { label:"Candidato DATA-002", name:"Julián Castaño", score:92, exp:"5 – 7 años", assigned:"Asignado hace 1 día",
         skills:[{n:"Python",v:95},{n:"SQL",v:90},{n:"Azure",v:85},{n:"Spark",v:90},{n:"ML",v:75},{n:"Power BI",v:70}] },
-      { label:"Candidato DATA-003", score:84, exp:"4 – 6 años", assigned:"Asignado hace 1 día",
+      { label:"Candidato DATA-003", name:"Sara Buitrago", score:84, exp:"4 – 6 años", assigned:"Asignado hace 1 día",
         skills:[{n:"Python",v:85},{n:"SQL",v:80},{n:"Azure",v:75},{n:"Spark",v:70},{n:"ML",v:60},{n:"Power BI",v:65}] },
-      { label:"Candidato DATA-004", score:76, exp:"3 – 5 años", assigned:"Asignado hace 1 día",
+      { label:"Candidato DATA-004", name:"Felipe Moreno", score:76, exp:"3 – 5 años", assigned:"Asignado hace 1 día",
         skills:[{n:"Python",v:75},{n:"SQL",v:70},{n:"Azure",v:70},{n:"Spark",v:60},{n:"ML",v:50},{n:"Power BI",v:50}] },
     ]
   },
@@ -1668,9 +1820,9 @@ const liderVacancies = [
     id:2, title:"Coordinador HSE", dept:"Operaciones",
     assigned:"Asignada hace 3 días", sla:"Vence en 3 días", slaUrgent:false,
     candidates:[
-      { label:"Candidato HSE-001", score:90, exp:"7 – 9 años", assigned:"Asignado hace 2 días",
+      { label:"Candidato HSE-001", name:"Paola Guerrero", score:90, exp:"7 – 9 años", assigned:"Asignado hace 2 días",
         skills:[{n:"Normatividad SST",v:95},{n:"ISO 45001",v:90},{n:"Gestión de riesgos",v:88},{n:"Auditorías",v:80},{n:"Manejo de emergencias",v:85},{n:"Reporting",v:75}] },
-      { label:"Candidato HSE-002", score:79, exp:"4 – 6 años", assigned:"Asignado hace 2 días",
+      { label:"Candidato HSE-002", name:"Andrés Villa", score:79, exp:"4 – 6 años", assigned:"Asignado hace 2 días",
         skills:[{n:"Normatividad SST",v:82},{n:"ISO 45001",v:75},{n:"Gestión de riesgos",v:78},{n:"Auditorías",v:65},{n:"Manejo de emergencias",v:70},{n:"Reporting",v:68}] },
     ]
   },
@@ -1678,20 +1830,53 @@ const liderVacancies = [
     id:3, title:"Especialista Contable", dept:"Finanzas",
     assigned:"Asignada hace 2 horas", sla:"Vence en 3 días", slaUrgent:false,
     candidates:[
-      { label:"Candidato CONT-001", score:88, exp:"5 – 7 años", assigned:"Asignado hace 2 horas",
+      { label:"Candidato CONT-001", name:"Lucía Ferreira", score:88, exp:"5 – 7 años", assigned:"Asignado hace 2 horas",
         skills:[{n:"NIIF",v:90},{n:"Conciliaciones",v:88},{n:"Excel avanzado",v:92},{n:"SAP",v:80},{n:"Impuestos",v:78},{n:"Auditoría",v:75}] },
     ]
   },
 ];
 
 let currentVacancy = null;
-const liderDecisions = {}; // key `${vacId}-${idx}` -> 'approved' | 'rejected'
+const liderDecisions = {}; // key `${vacId}-${idx}` -> 'approved' | 'rejected'  (anonimización)
+const liderScores = {};    // key `${stageKey}-${vacId}-${idx}` -> {crit1,crit2,crit3} (entrevistas)
 let liderVacPage = 1;
 const liderVacPageSize = 2;
 function goLiderVacPage(p){ liderVacPage = p; renderLiderVacTable(); }
 
+const liderStages = [
+  { key:"anon",  name:"Anonimización" },
+  { key:"ent1",  name:"Entrevista jefe inmediato" },
+  { key:"ent2",  name:"Segunda entrevista" },
+];
+let liderStage = 0; // index into liderStages
+
+function renderLiderRail(){
+  const rail = document.getElementById('liderStepRail');
+  rail.innerHTML = liderStages.map((s,idx) => {
+    let cls = 'step-node';
+    if (idx < liderStage) cls += ' done';
+    else if (idx === liderStage) cls += ' active';
+    else cls += ' locked';
+    return `<button class="${cls}" data-lstep="${idx}">
+        <span class="step-line"></span>
+        <span class="step-circle">${idx < liderStage ? '✓' : idx+1}</span>
+        <span class="step-name">${s.name}</span>
+      </button>`;
+  }).join('');
+  rail.querySelectorAll('.step-node').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ liderStage = parseInt(btn.dataset.lstep); liderCandPage = 1; renderLiderRail(); renderReportTable(); });
+  });
+}
+
 function pendingCount(vac){
-  return vac.candidates.filter((c,i)=> !liderDecisions[`${vac.id}-${i}`]).length;
+  // pending = candidates not yet decided/scored in the CURRENT stage
+  return vac.candidates.filter((c,i)=> !isLiderStageDone(vac.id, i)).length;
+}
+
+function isLiderStageDone(vacId, i){
+  const stage = liderStages[liderStage];
+  if (stage.key === 'anon') return !!liderDecisions[`${vacId}-${i}`];
+  return !!liderScores[`${stage.key}-${vacId}-${i}`];
 }
 
 function renderLiderVacTable(){
@@ -1740,10 +1925,38 @@ let liderCandPage = 1;
 const liderCandPageSize = 2;
 function goLiderCandPage(p){ liderCandPage = p; renderReportTable(); }
 
+function liderStageDone(vacId, i){
+  return isLiderStageDone(vacId, i);
+}
+
+function candDisplayName(c){
+  // En Anonimización el líder solo ve el ID; en las entrevistas ya conoce el nombre real.
+  return liderStages[liderStage].key === 'anon' ? c.label : (c.name || c.label);
+}
+
 function renderReportTable(){
   const vac = liderVacancies.find(v=>v.id===currentVacancy);
   const tbody = document.getElementById('reportTableBody');
+  const head = document.getElementById('reportTableHead');
   const pag = document.getElementById('reportPagination');
+  const stage = liderStages[liderStage];
+  const isAnon = stage.key === 'anon';
+
+  // La guía de evaluación y el aviso de anonimización solo aplican a la etapa de Anonimización.
+  const guiaWrap = document.getElementById('guiaWrap');
+  const blindBanner = document.getElementById('blindBanner');
+  if (guiaWrap) guiaWrap.style.display = isAnon ? '' : 'none';
+  if (blindBanner) blindBanner.style.display = isAnon ? '' : 'none';
+
+  // section header + table header per stage
+  document.getElementById('liderSectionTitle').textContent = isAnon ? 'Informes anonimizados' : stage.name;
+  document.getElementById('liderSectionHint').textContent = isAnon
+    ? 'Haga clic en el ícono de ojo para evaluar y decidir'
+    : 'Haga clic en el ícono de ojo para calificar por criterios';
+  head.innerHTML = isAnon
+    ? `<tr><th>Candidato</th><th>Puntuación IA</th><th>Experiencia</th><th>Decisión</th><th></th></tr>`
+    : `<tr><th>Candidato</th><th>Puntuación IA</th><th>Experiencia</th><th>Calificación</th><th></th></tr>`;
+
   const totalPages = Math.max(1, Math.ceil(vac.candidates.length/liderCandPageSize));
   if (liderCandPage > totalPages) liderCandPage = totalPages;
   const startIdx = (liderCandPage-1)*liderCandPageSize;
@@ -1753,7 +1966,19 @@ function renderReportTable(){
   tbody.innerHTML = pageIdx.map(i => {
     const c = vac.candidates[i];
     const key = `${vac.id}-${i}`;
-    const decision = liderDecisions[key];
+    let statusCell;
+    if (isAnon){
+      const decision = liderDecisions[key];
+      statusCell = decision ? `<span class="mini-pill ${decision==='approved'?'green':'magenta'}">${decision==='approved'?'Aprobado':'Rechazado'}</span>` : `<span class="mini-pill graylight">Pendiente</span>`;
+    } else {
+      const sc = liderScores[`${stage.key}-${key}`];
+      if (sc){
+        const avg = Math.round((sc.crit1+sc.crit2+sc.crit3)/3);
+        statusCell = `<span class="mini-pill green">Calificado · ${avg}/100</span>`;
+      } else {
+        statusCell = `<span class="mini-pill graylight">Sin calificar</span>`;
+      }
+    }
     return `<tr class="vac-row">
       <td>
         <div class="vac-name-cell">
@@ -1761,16 +1986,16 @@ function renderReportTable(){
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--geb-info)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
           </div>
           <div>
-            <div class="vac-title">${c.label}</div>
+            <div class="vac-title">${candDisplayName(c)}</div>
             <div class="vac-sub">${vac.title}</div>
           </div>
         </div>
       </td>
       <td><span class="cand-score ${c.score>=90?'':c.score>=80?'mid':'low'}" style="width:34px; height:34px; font-size:11.5px;">${c.score}</span></td>
       <td class="detail-text">${c.exp}</td>
-      <td>${decision ? `<span class="mini-pill ${decision==='approved'?'green':'magenta'}">${decision==='approved'?'Aprobado':'Rechazado'}</span>` : `<span class="mini-pill graylight">Pendiente</span>`}</td>
+      <td>${statusCell}</td>
       <td>
-        <button class="eye-btn" onclick="openCandidateModal(${vac.id}, ${i})" title="Ver detalle completo">
+        <button class="eye-btn" onclick="openCandidateModal(${vac.id}, ${i})" title="${isAnon?'Ver detalle completo':'Calificar'}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </td>
@@ -1792,7 +2017,7 @@ function buildCandidateCardHtml(vac, c, i){
         <button class="rc-reject" onclick="decide('${key}','rejected')">✕ Rechazar</button>
       </div>`;
   return `
-    <div class="report-card-head">
+    <div class="report-card-head" style="padding-right:34px;">
       <div>
         <div class="rc-name">${c.label}</div>
         <div class="rc-role">${vac.title}</div>
@@ -1825,10 +2050,48 @@ function buildCandidateCardHtml(vac, c, i){
   `;
 }
 
+function buildEvaluationFormHtml(vac, c, i){
+  const stage = liderStages[liderStage];
+  const key = `${stage.key}-${vac.id}-${i}`;
+  const saved = liderScores[key];
+  const criterios = ["Criterio de evaluación I","Criterio de evaluación II","Criterio de evaluación III"];
+  const fields = criterios.map((label,idx) => {
+    const val = saved ? saved[`crit${idx+1}`] : '';
+    return `<div class="field-group">
+      <label class="field-label">${label} <span style="color:var(--ink-faint); font-weight:500;">(0 – 100)</span></label>
+      <input type="number" min="0" max="100" class="field-input crit-input" data-crit="crit${idx+1}" value="${val!==''&&val!==undefined?val:''}" ${saved?'disabled':''} placeholder="0 – 100">
+    </div>`;
+  }).join('');
+  let footer;
+  if (saved){
+    const avg = Math.round((saved.crit1+saved.crit2+saved.crit3)/3);
+    footer = `<div class="eval-decided approved" style="margin-top:4px;">✓ Candidato calificado · promedio ${avg}/100</div>`;
+  } else {
+    footer = `<button class="eval-btn" style="margin-top:4px;" onclick="saveEvaluation(${vac.id}, ${i})">Calificar</button>`;
+  }
+  return `
+    <div class="report-card-head" style="padding-right:34px;">
+      <div>
+        <div class="rc-name">${c.name || c.label}</div>
+        <div class="rc-role">${vac.title} · ${stage.name}</div>
+      </div>
+      <span class="rc-assigned">${c.assigned}</span>
+    </div>
+    <div class="rc-section" style="margin-top:14px;">
+      <div class="rc-section-label">Criterios de evaluación</div>
+      ${fields}
+    </div>
+    ${footer}
+  `;
+}
+
 function openCandidateModal(vacId, idx){
   const vac = liderVacancies.find(v=>v.id===vacId);
   const c = vac.candidates[idx];
-  document.getElementById('candidateModalContent').innerHTML = buildCandidateCardHtml(vac, c, idx);
+  const isAnon = liderStages[liderStage].key === 'anon';
+  document.getElementById('candidateModalContent').innerHTML = isAnon
+    ? buildCandidateCardHtml(vac, c, idx)
+    : buildEvaluationFormHtml(vac, c, idx);
   document.getElementById('candidateModalOverlay').style.display = 'flex';
 }
 
@@ -1847,6 +2110,24 @@ function decide(key, decision){
     const idx = parseInt(idxStr);
     document.getElementById('candidateModalContent').innerHTML = buildCandidateCardHtml(vac, vac.candidates[idx], idx);
   }
+}
+
+function saveEvaluation(vacId, idx){
+  const stage = liderStages[liderStage];
+  const inputs = document.querySelectorAll('#candidateModalContent .crit-input');
+  const data = {};
+  let valid = true;
+  inputs.forEach(inp => {
+    let v = parseInt(inp.value);
+    if (isNaN(v) || v < 0 || v > 100){ valid = false; inp.style.borderColor = 'var(--geb-error)'; }
+    else { data[inp.dataset.crit] = v; }
+  });
+  if (!valid){ return; }
+  liderScores[`${stage.key}-${vacId}-${idx}`] = data;
+  renderLiderVacTable();
+  renderReportTable();
+  const vac = liderVacancies.find(v=>v.id===vacId);
+  document.getElementById('candidateModalContent').innerHTML = buildEvaluationFormHtml(vac, vac.candidates[idx], idx);
 }
 </script>
 </body>
